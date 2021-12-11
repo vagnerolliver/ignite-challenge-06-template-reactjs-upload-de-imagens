@@ -21,21 +21,11 @@ type DataResponse = {
 };
 
 type FetchImagesResponse = {
-  page: DataResponse[];
-  pageParams: PageParam[];
+  data: DataResponse[];
+  after: string;
 };
 
 export default function Home(): JSX.Element {
-  const fetchImages = async ({
-    pageParam = null,
-  }: PageParam): Promise<FetchImagesResponse> => {
-    const { data } = await api.get('api/images', { params: { pageParam } });
-
-    console.log('data', data);
-
-    return data;
-  };
-
   const {
     data,
     isLoading,
@@ -43,20 +33,29 @@ export default function Home(): JSX.Element {
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
-  } = useInfiniteQuery('images', fetchImages, {
-    getNextPageParam: (lastPage, pages) => lastPage.pageParams,
-  });
+  } = useInfiniteQuery(
+    'images',
+    async ({ pageParam = null }: PageParam): Promise<FetchImagesResponse> => {
+      const result = await api.get('api/images', { params: { pageParam } });
+
+      return result.data;
+    },
+    {
+      getNextPageParam: (lastPage, pages) => lastPage.after,
+    }
+  );
 
   const formattedData = useMemo(() => {
-    if (data?.pages) {
-      return data.pages.data;
-    }
+    const result = data?.pages.map(page => {
+      if (page?.data) return page.data;
+      return null;
+    });
+
+    return result.flat();
   }, [data]);
 
-  // TODO RENDER LOADING SCREEN
   if (isLoading) return <Loading />;
 
-  // TODO RENDER ERROR SCREEN
   if (isError) return <Error />;
 
   return (
