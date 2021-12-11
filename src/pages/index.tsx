@@ -51,7 +51,7 @@ export default function Home(): JSX.Element {
       return null;
     });
 
-    return result.flat();
+    return result?.flat();
   }, [data]);
 
   if (isLoading) return <Loading />;
