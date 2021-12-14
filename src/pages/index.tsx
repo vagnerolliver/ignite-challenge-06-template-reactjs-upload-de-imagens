@@ -36,7 +36,10 @@ export default function Home(): JSX.Element {
   } = useInfiniteQuery(
     'images',
     async ({ pageParam = null }: PageParam): Promise<FetchImagesResponse> => {
-      const result = await api.get('api/images', { params: { pageParam } });
+      console.log('pageParam', pageParam);
+      const result = await api.get('api/images', {
+        params: { after: pageParam },
+      });
 
       return result.data;
     },
